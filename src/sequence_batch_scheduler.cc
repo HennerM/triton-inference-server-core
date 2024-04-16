@@ -888,6 +888,21 @@ SequenceBatchScheduler::ReleaseSequenceSlot(
     return InferenceRequest::SequenceId();
   }
 
+  // A slot that is releasd because of cancellation
+  // might already been released by the reaper
+  // or the other way around.
+  // Check that no other correlation ID is using the slot already.
+  auto it = std::find_if(std::begin(sequence_to_batcherseqslot_map_), 
+    std::end(sequence_to_batcherseqslot_map_),
+                      [&batcher_seq_slot](const auto& p) { return p.second == batcher_seq_slot; });
+  if (it != std::end(sequence_to_batcherseqslot_map_)) {
+    auto existing_correlation_id = it->first;
+    LOG_INFO << "Tried to release slot " << " but already used by CORRID "
+              << existing_correlation_id << batcher_seq_slot.model_instance_
+              << ", slot " << batcher_seq_slot.seq_slot_;
+     return InferenceRequest::SequenceId();
+  }
+
   // If there is a backlogged sequence and it is requested, return it so that it
   // can use the newly available sequence slot.
   while (!backlog_queues_.empty()) {

@@ -96,6 +96,11 @@ class SequenceBatchScheduler : public Scheduler {
     }
     TritonModelInstance* model_instance_;
     uint32_t seq_slot_;
+
+    bool operator==(const BatcherSequenceSlot& other) const {
+        return (model_instance_ == other.model_instance_) &&
+               (seq_slot_ == other.seq_slot_);
+    }
   };
 
   // Fill a sequence slot with a sequence from the backlog or show
