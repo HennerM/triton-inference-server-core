@@ -95,6 +95,37 @@ CancelRequests(std::vector<std::unique_ptr<InferenceRequest>>&& requests)
   }
 }
 
+void IncrementCounter(TritonModelInstance* model_instance, const char* name, const uint64_t increment = 1)
+{
+#ifdef TRITON_ENABLE_METRICS
+  auto reporter = model_instance->MetricReporter();
+  if (reporter) {
+    reporter->IncrementCounter(name, increment);
+  }
+#endif
+}
+
+void IncrementGauge(TritonModelInstance* model_instance, const char* name, const double increment = 1)
+{
+  #ifdef TRITON_ENABLE_METRICS
+  auto reporter = model_instance->MetricReporter();
+  if (reporter) {
+    reporter->IncrementGauge(name, increment);
+  }
+#endif
+}
+
+
+void DecrementGauge(TritonModelInstance* model_instance, const char* name, const double increment = 1)
+{
+  #ifdef TRITON_ENABLE_METRICS
+  auto reporter = model_instance->MetricReporter();
+  if (reporter) {
+    reporter->DecrementGauge(name, increment);
+  }
+#endif
+}
+
 }  // namespace
 
 Status
@@ -784,6 +815,7 @@ SequenceBatchScheduler::Enqueue(std::unique_ptr<InferenceRequest>& irequest)
         wake_reaper_thread = true;
       }
     }
+    // TODO(markush) Increment backlog request gauge metric
     backlog->queue_->emplace_back(std::move(irequest));
 
     // If the sequence is ending then forget correlation ID
@@ -808,6 +840,8 @@ SequenceBatchScheduler::Enqueue(std::unique_ptr<InferenceRequest>& irequest)
     target = &sequence_to_batcherseqslot_map_[correlation_id];
     *target = ready_batcher_seq_slots_.top();
     ready_batcher_seq_slots_.pop();
+    IncrementGauge(target->model_instance_, kSequenceActiveMetric);
+    IncrementCounter(target->model_instance_, kSequenceStartedMetric);
   }
   // Last option is to assign this request to the backlog...
   else {
@@ -822,6 +856,8 @@ SequenceBatchScheduler::Enqueue(std::unique_ptr<InferenceRequest>& irequest)
         wake_reaper_thread = true;
       }
     }
+    // TODO(markush): Increment backlog sequences guage metric
+    // TODO(markush): Increment backlog request gauge metric
     backlog_queues_.push_back(backlog);
     backlog->queue_->emplace_back(std::move(irequest));
     if (!seq_end) {
@@ -923,6 +959,10 @@ SequenceBatchScheduler::ReleaseSequenceSlot(
       continue;
     }
 
+    // TODO(markush): Decrement backlog sequences gauge by 1
+    // TODO(markush): Decrement backlog requests by the number of requests in `backlog`
+
+
     const auto& irequest = backlog->back();
     const InferenceRequest::SequenceId& correlation_id =
         irequest->CorrelationId();
@@ -953,6 +993,7 @@ SequenceBatchScheduler::ReleaseSequenceSlot(
     }
 
     if (seq_cancelled) {
+      // TODO(markush) increment backlog sequence cancelled metric
       LOG_VERBOSE(1) << irequest->LogRequest() << "CORRID " << correlation_id
                      << " sequence cancelled: " << irequest->ModelName();
       MarkRequestsCancelled(backlog.get());
@@ -974,6 +1015,7 @@ SequenceBatchScheduler::ReleaseSequenceSlot(
                  << batcher_seq_slot.seq_slot_;
 
   ready_batcher_seq_slots_.push(batcher_seq_slot);
+  DecrementGauge(batcher_seq_slot.model_instance_, kSequenceActiveMetric);
   return InferenceRequest::SequenceId();
 }
 
@@ -1086,7 +1128,6 @@ SequenceBatchScheduler::ReaperThread(const int nice)
           // done outside the lock, so just collect needed info here.
           if (idle_sb_itr != sequence_to_batcherseqslot_map_.end()) {
             force_end_sequences[idle_correlation_id] = idle_sb_itr->second;
-
             sequence_to_batcherseqslot_map_.erase(idle_correlation_id);
             cid_itr = correlation_id_timestamps_.erase(cid_itr);
           } else {
@@ -1160,6 +1201,11 @@ SequenceBatchScheduler::ReaperThread(const int nice)
             if ((mit != sequence_to_backlog_map_.end()) &&
                 (mit->second->expiration_timestamp_ <= now_us)) {
               sequence_to_backlog_map_.erase(mit);
+
+              // TODO(markush): Increment expired backlog sequence counter
+              // TODO(markush): Decrement backlog sequences gauge metric
+              // TODO(markush): Decrement backlog request gauge metric by 
+
             }
 
             it = backlog_queues_.erase(it);
@@ -1958,7 +2004,7 @@ OldestSequenceBatch::CompleteAndNext(const uint32_t seq_slot)
 
     // We may enqueue 1 or more pending inferences triggered by the
     // completion. If the sequence has a pending inference then it needs
-    // to be send to dynamic batcher since the "previous" inference just
+    // to be sent to dynamic batcher since the "previous" inference just
     // completed. If this next inference ends up being the end of the
     // sequence (either from the END flag or because the sequence is
     // being force-ended) then we try to fill the now-free sequence slot
@@ -1986,6 +2032,7 @@ OldestSequenceBatch::CompleteAndNext(const uint32_t seq_slot)
           LOG_VERBOSE(1) << "force-end timed-out sequence in batcher "
                          << model_instance_->Name() << ", slot " << seq_slot;
           release_seq_slot = true;
+          IncrementCounter(model_instance_, kSequenceExpiredMetric);
         } else if (irequest->IsCancelled()) {
           const InferenceRequest::SequenceId& correlation_id =
               irequest->CorrelationId();
@@ -1995,6 +2042,7 @@ OldestSequenceBatch::CompleteAndNext(const uint32_t seq_slot)
                          << model_instance_->Name() << ", slot " << seq_slot;
           release_seq_slot = true;
           retain_queue_front = true;
+          IncrementCounter(model_instance_, kSequenceCancelledMetric);
         } else {
           const InferenceRequest::SequenceId& correlation_id =
               irequest->CorrelationId();
@@ -2008,6 +2056,7 @@ OldestSequenceBatch::CompleteAndNext(const uint32_t seq_slot)
                            << correlation_id << " in batcher "
                            << model_instance_->Name() << ", slot " << seq_slot;
             release_seq_slot = true;
+            IncrementCounter(model_instance_, kSequenceEndedMetric);
           }
 
           // Add the appropriate control tensor values to the request.

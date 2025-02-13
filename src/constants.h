@@ -86,6 +86,18 @@ constexpr char kInitialStateFolder[] = "initial_state";
 // Metric names
 constexpr char kPendingRequestMetric[] = "inf_pending_request_count";
 
+// Sequence batcher candidate metrics
+constexpr char kSequenceStartedMetric[] = "seq_started_count";
+constexpr char kSequenceEndedMetric[] = "seq_ended_count";
+constexpr char kSequenceExpiredMetric[] = "seq_expired_count";
+constexpr char kSequenceCancelledMetric[] = "seq_cancelled_count";
+constexpr char kSequenceActiveMetric[] = "seq_active_gauge";
+
+// Sequence batcher backlog metrics
+constexpr char kSequenceBacklogExpiredMetric[] = "seq_backlog_expired_count";
+constexpr char kSequenceBacklogSequencesMetric[] = "seq_backlog_sequences_gauge";
+constexpr char kSequenceBacklogRequestsMetric[] = "seq_backlog_requests_gauge";
+
 constexpr uint64_t NANOS_PER_SECOND = 1000000000;
 constexpr uint64_t NANOS_PER_MILLIS = 1000000;
 constexpr int MAX_GRPC_MESSAGE_SIZE = INT32_MAX;

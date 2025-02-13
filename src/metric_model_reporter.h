@@ -65,6 +65,8 @@ struct MetricReporterConfig {
   // Whether this reporter's model has caching enabled or not.
   // This helps handle infer_stats aggregation for summaries on cache misses.
   bool cache_enabled_ = false;
+
+  bool sequence_metrics_enabled_ = true;
 #endif  // TRITON_ENABLE_METRICS
 };
 
@@ -113,6 +115,7 @@ class MetricModelReporter {
   void InitializeCounters(const std::map<std::string, std::string>& labels);
   void InitializeGauges(const std::map<std::string, std::string>& labels);
   void InitializeSummaries(const std::map<std::string, std::string>& labels);
+  void InitializeSequenceMetrics(const std::map<std::string, std::string>& labels);
 
   // Lookup gauge metric by name. Return gauge if found, nullptr otherwise.
   prometheus::Gauge* GetGauge(const std::string& name);

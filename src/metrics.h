@@ -213,6 +213,46 @@ class Metrics {
   {
     return GetSingleton()->inf_pending_request_count_family_;
   }
+  
+  static prometheus::Family<prometheus::Counter>& FamilySequenceStarted()
+  {
+    return GetSingleton()->seq_started_family_;
+  }
+
+  static prometheus::Family<prometheus::Counter>& FamilySequenceEnded()
+  {
+    return GetSingleton()->seq_ended_family_;
+  }
+
+  static prometheus::Family<prometheus::Counter>& FamilySequenceExpired()
+  {
+    return GetSingleton()->seq_expired_family_;
+  }
+
+  static prometheus::Family<prometheus::Counter>& FamilySequenceCancelled()
+  {
+    return GetSingleton()->seq_cancelled_family_;
+  }
+
+  static prometheus::Family<prometheus::Gauge>& FamilySequenceActive()
+  {
+    return GetSingleton()->seq_active_family_;
+  }
+
+  static prometheus::Family<prometheus::Counter>& FamilySequenceBacklogExpired()
+  {
+    return GetSingleton()->seq_backlog_expired_family_;
+  }
+
+  static prometheus::Family<prometheus::Gauge>& FamilySequenceBacklogSequences()
+  {
+    return GetSingleton()->seq_backlog_sequences_family_;
+  }
+
+  static prometheus::Family<prometheus::Gauge>& FamilySequenceBacklogRequests()
+  {
+    return GetSingleton()->seq_backlog_requests_family_;
+  }
 
   // Metric families of per-model response cache metrics
   // NOTE: These are used in infer_stats for perf_analyzer
@@ -299,6 +339,16 @@ class Metrics {
   prometheus::Family<prometheus::Counter>&
       inf_compute_output_duration_us_family_;
   prometheus::Family<prometheus::Gauge>& inf_pending_request_count_family_;
+
+  prometheus::Family<prometheus::Counter>& seq_started_family_;
+  prometheus::Family<prometheus::Counter>& seq_ended_family_;
+  prometheus::Family<prometheus::Counter>& seq_expired_family_;
+  prometheus::Family<prometheus::Counter>& seq_cancelled_family_;
+  prometheus::Family<prometheus::Gauge>& seq_active_family_;
+
+  prometheus::Family<prometheus::Counter>& seq_backlog_expired_family_;
+  prometheus::Family<prometheus::Gauge>& seq_backlog_sequences_family_;
+  prometheus::Family<prometheus::Gauge>& seq_backlog_requests_family_;
 
   prometheus::Family<prometheus::Gauge>& pinned_memory_pool_total_family_;
   prometheus::Family<prometheus::Gauge>& pinned_memory_pool_used_family_;

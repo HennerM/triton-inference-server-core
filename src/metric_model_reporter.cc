@@ -56,6 +56,11 @@ MetricReporterConfig::ParseConfig(bool response_cache_enabled)
       latency_summaries_enabled_ = true;
     }
 
+    // sequence_metrics_enabled_
+    if (pair.first == "sequence_metrics" && pair.second == "false") {
+      sequence_metrics_enabled_ = false;
+    }
+
     // ex: summary_quantiles="0.5:0.05 0.9:0.01 0.99:0.001"
     if (pair.first == "summary_quantiles") {
       const auto& quantiles = ParseQuantiles(pair.second);
@@ -153,6 +158,7 @@ MetricModelReporter::MetricModelReporter(
   InitializeCounters(labels);
   InitializeGauges(labels);
   InitializeSummaries(labels);
+  InitializeSequenceMetrics(labels);
 }
 
 MetricModelReporter::~MetricModelReporter()
@@ -284,6 +290,40 @@ MetricModelReporter::InitializeSummaries(
     if (family_ptr) {
       summaries_[name] = CreateMetric<prometheus::Summary>(
           *family_ptr, labels, config_.quantiles_);
+    }
+  }
+}
+
+void
+MetricModelReporter::InitializeSequenceMetrics(
+  const std::map<std::string, std::string>& labels)
+{
+  if (config_.sequence_metrics_enabled_) {
+    // Sequence metrics
+    gauge_families_[kSequenceActiveMetric] = &Metrics::FamilySequenceActive();
+    // gauge_families_["seq_backlog_sequences"] =
+    //     &Metrics::FamilySequenceBacklogSequences();
+    // gauge_families_["seq_backlog_requests"] =
+    //     &Metrics::FamilySequenceBacklogRequests();
+    counter_families_[kSequenceStartedMetric] = &Metrics::FamilySequenceStarted();
+    counter_families_[kSequenceEndedMetric] = &Metrics::FamilySequenceEnded();
+    counter_families_[kSequenceExpiredMetric] = &Metrics::FamilySequenceExpired();
+    counter_families_[kSequenceCancelledMetric] = &Metrics::FamilySequenceCancelled();
+
+    for (auto& iter : gauge_families_) {
+      const auto& name = iter.first;
+      auto family_ptr = iter.second;
+      if (family_ptr) {
+        gauges_[name] = CreateMetric<prometheus::Gauge>(*family_ptr, labels);
+      }
+    }
+
+    for (auto& iter : counter_families_) {
+      const auto& name = iter.first;
+      auto family_ptr = iter.second;
+      if (family_ptr) {
+        counters_[name] = CreateMetric<prometheus::Counter>(*family_ptr, labels);
+      }
     }
   }
 }

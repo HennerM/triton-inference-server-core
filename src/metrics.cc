@@ -109,6 +109,72 @@ Metrics::Metrics()
                     "execution per-model.")
               .Register(*registry_)),
 
+      seq_started_family_(
+          prometheus::BuildCounter()
+              .Name("nv_sequence_batch_scheduler_sequence_started")
+              .Help("Number of candidate sequences started with SEQUENCE_START "
+                    "and got a "
+                    "slot assigned in "
+                    "sequence_batch_scheduler ")
+              .Register(*registry_)),
+      seq_ended_family_(
+          prometheus::BuildCounter()
+              .Name("nv_sequence_batch_scheduler_sequence_ended")
+              .Help("Number of candidate sequences ended properly in "
+                    "sequence_batch_scheduler with SEQUENCE_END")
+              .Register(*registry_)),
+      seq_expired_family_(
+          prometheus::BuildCounter()
+              .Name("nv_sequence_batch_scheduler_sequence_expired")
+              .Help("Number of candidate sequences in sequence_batch_scheduler "
+                    "that "
+                    "expired after idling for longer than "
+                    "max_sequence_idle_microseconds, but before sequence "
+                    "completion")
+              .Register(*registry_)),
+      seq_cancelled_family_(
+          prometheus::BuildCounter()
+              .Name("nv_sequence_batch_scheduler_sequence_cancelled")
+              .Help("Number of candidate sequences in sequence_batch_scheduler "
+                    "that were "
+                    "cancelled by the user before sequence completion")
+              .Register(*registry_)),
+      seq_active_family_(
+          prometheus::BuildGauge()
+              .Name("nv_sequence_batch_scheduler_sequence_active")
+              .Help("Instantaneous number of candidate sequences in "
+                    "sequence_batch_scheduler. These "
+                    "are active sequences that have been started but not yet "
+                    "ended or "
+                    "expired.")
+              .Register(*registry_)),
+      seq_backlog_expired_family_(
+          prometheus::BuildCounter()
+              .Name("nv_sequence_batch_scheduler_sequence_backlog_expired")
+              .Help("Number of sequences in sequence_batch_scheduler backlog "
+                    "that "
+                    "expired after idling for longer than "
+                    "max_sequence_idle_microseconds, but before sequence "
+                    "got active")
+              .Register(*registry_)),
+      seq_backlog_sequences_family_(
+          prometheus::BuildGauge()
+              .Name("nv_sequence_batch_scheduler_sequence_backlog_sequences")
+              .Help("Instantaneous number of sequences in "
+                    "sequence_batch_scheduler that are currently in the "
+                    "backlog. These are sequences that have been started by "
+                    "the user but not yet assigned a sequence slot.")
+              .Register(*registry_)),
+      seq_backlog_requests_family_(
+          prometheus::BuildGauge()
+              .Name("nv_sequence_batch_scheduler_sequence_backlog")
+              .Help("Instantaneous number of requests in "
+                    "sequence_batch_scheduler that are currently in the "
+                    "backlog. These are requests that belong to sequences that "
+                    "have not started yet.")
+              .Register(*registry_)),
+
+
       pinned_memory_pool_total_family_(
           prometheus::BuildGauge()
               .Name("nv_pinned_memory_pool_total_bytes")
