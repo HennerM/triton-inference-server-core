@@ -146,6 +146,7 @@ set(
   repo_agent.cc
   scheduler_utils.cc
   sequence_batch_scheduler/sequence_batch_scheduler.cc
+  sequence_batch_scheduler/sequence_metric_reporter.cc
   sequence_batch_scheduler/sequence_utils.cc
   sequence_state.cc
   server.cc
@@ -195,6 +196,7 @@ set(
   scheduler.h
   scheduler_utils.h
   sequence_batch_scheduler/sequence_batch_scheduler.h
+  sequence_batch_scheduler/sequence_metric_reporter.h
   sequence_batch_scheduler/sequence_utils.h
   sequence_state.h
   server.h

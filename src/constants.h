@@ -94,7 +94,11 @@ constexpr char kSequenceCancelledMetric[] = "seq_cancelled_count";
 constexpr char kSequenceActiveMetric[] = "seq_active_gauge";
 
 // Sequence batcher backlog metrics
+constexpr char kSequenceBacklogSequencesQueuedMetric[] = "seq_backlog_sequences_queued_count";
+constexpr char kSequenceBacklogRequestsQueuedMetric[] = "seq_backlog_requests_queued_count";
 constexpr char kSequenceBacklogExpiredMetric[] = "seq_backlog_expired_count";
+constexpr char kSequenceBacklogCancelledMetric[] = "seq_backlog_cancelled_count";
+
 constexpr char kSequenceBacklogSequencesMetric[] = "seq_backlog_sequences_gauge";
 constexpr char kSequenceBacklogRequestsMetric[] = "seq_backlog_requests_gauge";
 

@@ -43,6 +43,7 @@
 #include "scheduler_utils.h"
 #include "sequence_state.h"
 #include "sequence_utils.h"
+#include "sequence_metric_reporter.h"
 #include "status.h"
 #include "triton/common/model_config.h"
 
@@ -130,11 +131,7 @@ class SequenceBatchScheduler : public Scheduler {
  private:
   SequenceBatchScheduler(
       TritonModel* model,
-      const std::unordered_map<std::string, bool>& enforce_equal_shape_tensors)
-      : model_(model),
-        enforce_equal_shape_tensors_(enforce_equal_shape_tensors), stop_(false)
-  {
-  }
+      const std::unordered_map<std::string, bool>& enforce_equal_shape_tensors);
 
   void StartBackgroundThreads();
   void StopBackgroundThreads();
@@ -183,9 +180,14 @@ class SequenceBatchScheduler : public Scheduler {
   // without preventing the scheduler from scheduling requests.
   void CleanUpThread(const int nice);
 
+  void IncrementCounter(const char* name, const double value = 1);
+  void IncrementGauge(const char* name, const double value = 1);
+  void DecrementGauge(const char* name, const double value = 1);
+
   // The 'TritonModel' and 'enforce_equal_shape_tensors' when this scheduler is
   // created.
   TritonModel* model_;
+  std::shared_ptr<SequenceMetricReporter> sequence_metric_reporter_;
   std::unordered_map<std::string, bool> enforce_equal_shape_tensors_;
 
   // The number of candidate sequence slots.

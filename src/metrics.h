@@ -239,9 +239,24 @@ class Metrics {
     return GetSingleton()->seq_active_family_;
   }
 
+  static prometheus::Family<prometheus::Counter>& FamilySequenceBacklogSequencesQueued()
+  {
+    return GetSingleton()->seq_backlog_sequences_queued_family_;
+  }
+
+  static prometheus::Family<prometheus::Counter>& FamilySequenceBacklogRequestsQueued()
+  {
+    return GetSingleton()->seq_backlog_requests_queued_family_;
+  }
+
   static prometheus::Family<prometheus::Counter>& FamilySequenceBacklogExpired()
   {
     return GetSingleton()->seq_backlog_expired_family_;
+  }
+
+  static prometheus::Family<prometheus::Counter>& FamilySequenceBacklogCancelled()
+  {
+    return GetSingleton()->seq_backlog_cancelled_family_;
   }
 
   static prometheus::Family<prometheus::Gauge>& FamilySequenceBacklogSequences()
@@ -346,7 +361,10 @@ class Metrics {
   prometheus::Family<prometheus::Counter>& seq_cancelled_family_;
   prometheus::Family<prometheus::Gauge>& seq_active_family_;
 
+  prometheus::Family<prometheus::Counter>& seq_backlog_sequences_queued_family_;
+  prometheus::Family<prometheus::Counter>& seq_backlog_requests_queued_family_;
   prometheus::Family<prometheus::Counter>& seq_backlog_expired_family_;
+  prometheus::Family<prometheus::Counter>& seq_backlog_cancelled_family_;
   prometheus::Family<prometheus::Gauge>& seq_backlog_sequences_family_;
   prometheus::Family<prometheus::Gauge>& seq_backlog_requests_family_;
 

@@ -148,18 +148,36 @@ Metrics::Metrics()
                     "ended or "
                     "expired.")
               .Register(*registry_)),
+
+      seq_backlog_sequences_queued_family_(
+          prometheus::BuildCounter()
+              .Name("nv_sequence_batch_scheduler_backlog_sequences_queued")
+              .Help("Number of sequences in sequence_batch_scheduler that got added to the backlog")
+              .Register(*registry_)),
+      seq_backlog_requests_queued_family_(
+                prometheus::BuildCounter()
+                    .Name("nv_sequence_batch_scheduler_backlog_requests_queued")
+                    .Help("Number of requests in sequence_batch_scheduler that got added to the backlog."
+                    "These all belong to sequences that are in the backlog.")
+                    .Register(*registry_)),
       seq_backlog_expired_family_(
           prometheus::BuildCounter()
-              .Name("nv_sequence_batch_scheduler_sequence_backlog_expired")
+              .Name("nv_sequence_batch_scheduler_backlog_expired")
               .Help("Number of sequences in sequence_batch_scheduler backlog "
                     "that "
                     "expired after idling for longer than "
                     "max_sequence_idle_microseconds, but before sequence "
                     "got active")
               .Register(*registry_)),
+      seq_backlog_cancelled_family_(
+                prometheus::BuildCounter()
+                    .Name("nv_sequence_batch_scheduler_backlog_cancelled")
+                    .Help("Number of sequences in sequence_batch_scheduler backlog "
+                          "that were cancelled by the user before sequence got active")
+                    .Register(*registry_)),
       seq_backlog_sequences_family_(
           prometheus::BuildGauge()
-              .Name("nv_sequence_batch_scheduler_sequence_backlog_sequences")
+              .Name("nv_sequence_batch_scheduler_backlog_sequences")
               .Help("Instantaneous number of sequences in "
                     "sequence_batch_scheduler that are currently in the "
                     "backlog. These are sequences that have been started by "
@@ -167,7 +185,7 @@ Metrics::Metrics()
               .Register(*registry_)),
       seq_backlog_requests_family_(
           prometheus::BuildGauge()
-              .Name("nv_sequence_batch_scheduler_sequence_backlog")
+              .Name("nv_sequence_batch_scheduler_backlog_requests")
               .Help("Instantaneous number of requests in "
                     "sequence_batch_scheduler that are currently in the "
                     "backlog. These are requests that belong to sequences that "
